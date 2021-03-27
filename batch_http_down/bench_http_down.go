@@ -13,7 +13,7 @@ import (
 
 var downCron = flag.String("downCron", "*/1 * * * * *", "cron表达式, 默认每秒")
 var downNum = flag.Int("downNum", 3000, "向多少个终端发送消息")
-var url = flag.String("url", "http://admin.skyworthtest.top/api", "地址")
+var url = flag.String("url", "", "地址")
 var random = flag.Int("random", 3, "cron后随机延时发送时间,单位s")
 var payload = flag.String("payload", "testtest", "cron后随机延时发送时间,单位毫秒")
 

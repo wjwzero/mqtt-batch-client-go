@@ -26,7 +26,7 @@ import (
 
 var urlString = flag.String("url", "", "broker url")
 var southUrl = flag.String("southUrl", "", "当urlString指定连接地址为空时,从south api url获取mqtt broker 连接地址")
-var workers = flag.Int("workers", 1000, "number of workers")
+var workers = flag.Int("workers", 300, "number of workers")
 var qos = flag.Uint("qos", 1, "sub qos level")
 var clearsession = flag.Bool("clear", true, "clear session")
 
@@ -39,10 +39,10 @@ var developerId = flag.String("developerId", "90b9aa7e25f80cf4f64e990b78a9fc5ebd
 var pk = flag.String("pk", "bench_mqtt", "productKey")
 
 // 初始化 push
-var initPushFlag = flag.Bool("initPushFlag", true, "init push flag")
+var initPushFlag = flag.Bool("initPushFlag", false, "init push flag")
 
 // 并发数
-var currNum = flag.Int("currNum", 1000, "并发数")
+var currNum = flag.Int("currNum", 100, "并发连接数")
 
 // 间隔
 var gap = flag.Int("gap", 200, "间隔ms数")
@@ -57,18 +57,29 @@ var randomPush = flag.Int("randomPush", 0, "cron后随机延时发送时间,单�
 
 var redisAddress = flag.String("redisAddress", "", "redis连接地址")
 var redisAuth = flag.String("redisAuth", "", "redis密码")
-var setNodeNo = flag.Int("setNodeNo", -1, "指定节点编号")
+var setNodeNo = flag.Int("setNodeNo", 0, "指定节点编号")
+var tlsFlag = flag.Bool("tls", true, "是否使用tls连接")
 
 var conNum int32
 var currentNode int
+var frontPosition string
+var postPosition string
 
 var currentNodes = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
 
 func init() {
+	if *tlsFlag {
+		frontPosition = "mqtts://"
+		postPosition = ":8883"
+	} else {
+		frontPosition = "mqtt://"
+		postPosition = ":1883"
+	}
 	if *setNodeNo != -1 {
 		currentNode = *setNodeNo
 		return
 	}
+
 X:
 	for x, nodeNo := range currentNodes {
 		//log.Printf("nodeNo %d", nodeNo)
@@ -139,7 +150,8 @@ func createConn() {
 	// mqtt broker 连接源判定
 	var urlStr string
 	if *urlString == "" {
-		urlStr = mqtt_cluster_ip.GetMqttClusterIp(*southUrl)
+		urlStr = mqtt_cluster_ip.GetMqttClusterIp(*southUrl, dk)
+
 	} else {
 		urlStr = *urlString
 	}
@@ -148,7 +160,7 @@ func createConn() {
 	num := i % len(urlArr)
 	url := urlArr[num]
 	clientId := dk + "_" + uuid
-	opts := mqtt.NewClientOptions().AddBroker(url).SetClientID(clientId)
+	opts := mqtt.NewClientOptions().AddBroker(frontPosition + url + postPosition).SetClientID(clientId)
 	//自动重连机制，如网络不稳定可开启
 	opts.SetAutoReconnect(true)      //启用自动重连功能
 	opts.SetMaxReconnectInterval(10) //每30秒尝试重连
@@ -283,6 +295,7 @@ func main() {
 	fmt.Println("ca地址:", *ca)
 	fmt.Println("clientCertFile地址:", *clientCertFile)
 	fmt.Println("clientKeyFile地址:", *clientKeyFile)
+	fmt.Println("*tlsFlag:", *tlsFlag)
 	connAndSub()
 
 }

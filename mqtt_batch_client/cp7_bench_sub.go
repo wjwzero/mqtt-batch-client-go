@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"mqtt-batch-client-go/local_ip"
 	"mqtt-batch-client-go/mapstring"
+	"mqtt-batch-client-go/redis"
 	"os"
 	"os/signal"
 	"strconv"
@@ -53,11 +54,39 @@ var publishNum = flag.Int("publishNum", 1000, "发送消息的协程数量")
 
 var randomPush = flag.Int("randomPush", 0, "cron后随机延时发送时间,单位min")
 
+var redisAddress = flag.String("redisAddress", "", "redis连接地址")
+var redisAuth = flag.String("redisAuth", "", "redis密码")
+var setNodeNo = flag.Int("setNodeNo", -1, "指定节点编号")
+
 var conNum int32
 var currentNode int
 
+var currentNodes = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
+
 func init() {
-	currentNode = 1
+	if *setNodeNo != -1 {
+		currentNode = *setNodeNo
+		return
+	}
+X:
+	for x, nodeNo := range currentNodes {
+		//log.Printf("nodeNo %d", nodeNo)
+		lock := redis.NewRedisPool(*redisAddress, *redisAuth)
+		if lock.AddLockDisExpire("batch_"+strconv.Itoa(nodeNo), ip.String()) {
+			currentNode = nodeNo
+			break
+		} else {
+			ipGet := lock.GetLock("batch_" + strconv.Itoa(nodeNo))
+			if ipGet == ip.String() {
+				currentNode = nodeNo
+				break
+			}
+			log.Printf("未找到NO ！！！now: %d", x)
+			if nodeNo == 21 {
+				goto X
+			}
+		}
+	}
 	log.Printf("根据IP %s 从redis 分布式锁获取 node %d", ip.String(), currentNode)
 }
 
@@ -186,7 +215,6 @@ RECONNECT:
 var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	log.Printf("client 收到消息: %s", msg)
 }
-
 
 func NewTLSConfig() *tls.Config {
 	// Import trusted certificates from CAfile.pem.

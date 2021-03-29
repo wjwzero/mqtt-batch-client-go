@@ -3,7 +3,6 @@ package mqtt_cluster_ip
 import (
 	"fmt"
 	"github.com/bitly/go-simplejson"
-	"github.com/hashicorp/go-uuid"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,9 +11,8 @@ import (
 /**
 从南向获得分配到的mqtt节点
 */
-func GetMqttClusterIp(southUrl string) string {
-	uuidStr, _ := uuid.GenerateUUID()
-	resp, err := http.Get(southUrl + "&deviceKey=" + uuidStr)
+func GetMqttClusterIp(southUrl string, deviceKey string) string {
+	resp, err := http.Get(southUrl + "&deviceKey=" + deviceKey)
 	if err != nil {
 		log.Print("访问中心节点失败", err)
 	}

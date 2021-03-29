@@ -1,6 +1,7 @@
 package mqtt_cluster_ip
 
 import (
+	"github.com/hashicorp/go-uuid"
 	"testing"
 )
 
@@ -12,6 +13,6 @@ func TestGetMqttClusterIp(t *testing.T) {
 	//	log.Print("----------------------")
 	//}
 	//select {}
-
-	GetMqttClusterIp("")
+	uuidStr, _ := uuid.GenerateUUID()
+	GetMqttClusterIp("", uuidStr)
 }

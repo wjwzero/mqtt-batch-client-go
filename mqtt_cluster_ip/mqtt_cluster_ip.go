@@ -1,7 +1,6 @@
 package mqtt_cluster_ip
 
 import (
-	"flag"
 	"fmt"
 	"github.com/bitly/go-simplejson"
 	"github.com/hashicorp/go-uuid"
@@ -9,8 +8,6 @@ import (
 	"log"
 	"net/http"
 )
-
-var southUrl = flag.String("southUrl", "http://admin.skyworthtest.top/api/skyworthSouthbound/mqttIpConfig/getClusterIp?productKey=bench_mqtt", "南向地址获得mqttconfig 地址")
 
 /**
 从南向获得分配到的mqtt节点
@@ -36,4 +33,3 @@ func GetMqttClusterIp(southUrl string) string {
 	log.Print(res)
 	return res
 }
-

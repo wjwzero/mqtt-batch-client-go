@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"mqtt-batch-client-go/local_ip"
 	"mqtt-batch-client-go/mapstring"
+	"mqtt-batch-client-go/mqtt_cluster_ip"
 	"mqtt-batch-client-go/redis"
 	"os"
 	"os/signal"
@@ -23,8 +24,8 @@ import (
 	"time"
 )
 
-//var urlString = flag.String("url", "mqtts://124.70.73.148:8883", "broker url")
-var urlString = flag.String("url", "mqtt://114.116.244.139:1883", "broker url")
+var urlString = flag.String("url", "", "broker url")
+var southUrl = flag.String("southUrl", "", "当urlString指定连接地址为空时,从south api url获取mqtt broker 连接地址")
 var workers = flag.Int("workers", 1000, "number of workers")
 var qos = flag.Uint("qos", 1, "sub qos level")
 var clearsession = flag.Bool("clear", true, "clear session")
@@ -134,7 +135,16 @@ func createConn() {
 	id := strconv.Itoa(i)
 	uuid, _ := uuid.GenerateUUID()
 	dk := strconv.Itoa(currentNode) + "test" + id
-	urlArr := strings.Split(*urlString, ",")
+
+	// mqtt broker 连接源判定
+	var urlStr string
+	if *urlString == "" {
+		urlStr = mqtt_cluster_ip.GetMqttClusterIp(*southUrl)
+	} else {
+		urlStr = *urlString
+	}
+
+	urlArr := strings.Split(urlStr, ",")
 	num := i % len(urlArr)
 	url := urlArr[num]
 	clientId := dk + "_" + uuid

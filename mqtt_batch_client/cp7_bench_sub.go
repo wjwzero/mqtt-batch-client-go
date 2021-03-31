@@ -26,7 +26,7 @@ import (
 
 var urlString = flag.String("url", "", "broker url")
 var southUrl = flag.String("southUrl", "", "当urlString指定连接地址为空时,从south api url获取mqtt broker 连接地址")
-var workers = flag.Int("workers", 300, "number of workers")
+var workers = flag.Int("workers", 3000, "number of workers")
 var qos = flag.Uint("qos", 1, "sub qos level")
 var clearsession = flag.Bool("clear", true, "clear session")
 
